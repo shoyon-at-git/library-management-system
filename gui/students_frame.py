@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from models.students import (
     add_student, update_student, delete_student,
     search_students, get_students
@@ -8,84 +8,143 @@ from models.students import (
 class StudentsFrame(tk.Frame):
 
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, bg="white")
 
-        tk.Label(self, text="ID").grid(row=0,column=0)
-        tk.Label(self, text="Name").grid(row=1,column=0)
-        tk.Label(self, text="Department").grid(row=2,column=0)
+        # Title
+        title = tk.Label(self, text="👨‍🎓 Students Management", bg="white",
+                        fg="#0b3c5d", font=("Segoe UI", 16, "bold"))
+        title.pack(pady=(0, 15), anchor="w", padx=15)
 
-        self.id_e = tk.Entry(self)
-        self.n_e = tk.Entry(self)
-        self.d_e = tk.Entry(self)
+        # Form section
+        form_frame = tk.LabelFrame(self, text="Add / Update Student", bg="white",
+                                   fg="#333", font=("Segoe UI", 10, "bold"), padx=15, pady=10)
+        form_frame.pack(fill="x", padx=15, pady=(0, 15))
 
-        self.id_e.grid(row=0,column=1)
-        self.n_e.grid(row=1,column=1)
-        self.d_e.grid(row=2,column=1)
+        # Input fields
+        tk.Label(form_frame, text="Name:", bg="white", font=("Segoe UI", 9)).grid(row=0, column=0, sticky="w", pady=5)
+        self.n_e = tk.Entry(form_frame, width=35, font=("Segoe UI", 9))
+        self.n_e.grid(row=0, column=1, sticky="w", padx=(10, 0), pady=5)
 
-        tk.Button(self, text="Add", width=10, command=self.add).grid(row=3,column=0)
-        tk.Button(self, text="Update", width=10, command=self.update).grid(row=3,column=1)
-        tk.Button(self, text="Delete", width=10, command=self.delete).grid(row=4,column=0)
-        tk.Button(self, text="Search", width=10, command=self.search).grid(row=4,column=1)
+        tk.Label(form_frame, text="Department:", bg="white", font=("Segoe UI", 9)).grid(row=1, column=0, sticky="w", pady=5)
+        self.d_e = tk.Entry(form_frame, width=35, font=("Segoe UI", 9))
+        self.d_e.grid(row=1, column=1, sticky="w", padx=(10, 0), pady=5)
 
-        self.list = tk.Listbox(self, width=60)
-        self.list.grid(row=0,column=2,rowspan=10,padx=10)
+        tk.Label(form_frame, text="ID:", bg="white", font=("Segoe UI", 9)).grid(row=0, column=2, sticky="w", padx=(20, 0), pady=5)
+        self.id_e = tk.Entry(form_frame, width=20, font=("Segoe UI", 9), state="readonly")
+        self.id_e.grid(row=0, column=3, sticky="w", padx=(10, 0), pady=5)
 
-        self.list.bind("<<ListboxSelect>>", self.fill_from_list)
+        # Buttons
+        button_frame = tk.Frame(form_frame, bg="white")
+        button_frame.grid(row=2, column=0, columnspan=4, pady=(10, 0))
+
+        tk.Button(button_frame, text="➕ Add", bg="#27ae60", fg="white",
+                 font=("Segoe UI", 9, "bold"), padx=15, command=self.add).pack(side="left", padx=5)
+        tk.Button(button_frame, text="✏️ Update", bg="#3498db", fg="white",
+                 font=("Segoe UI", 9, "bold"), padx=15, command=self.update).pack(side="left", padx=5)
+        tk.Button(button_frame, text="🗑️ Delete", bg="#e74c3c", fg="white",
+                 font=("Segoe UI", 9, "bold"), padx=15, command=self.delete).pack(side="left", padx=5)
+        tk.Button(button_frame, text="🔍 Search", bg="#f39c12", fg="white",
+                 font=("Segoe UI", 9, "bold"), padx=15, command=self.search).pack(side="left", padx=5)
+
+        # List section
+        list_frame = tk.LabelFrame(self, text="Students List", bg="white",
+                                   fg="#333", font=("Segoe UI", 10, "bold"), padx=10, pady=10)
+        list_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+
+        # Create treeview for better display
+        columns = ("ID", "Name", "Department")
+        self.tree = ttk.Treeview(list_frame, columns=columns, height=15, show="headings")
+        
+        self.tree.column("ID", width=50, anchor="center")
+        self.tree.column("Name", width=200, anchor="w")
+        self.tree.column("Department", width=150, anchor="w")
+
+        self.tree.heading("ID", text="ID")
+        self.tree.heading("Name", text="Name")
+        self.tree.heading("Department", text="Department")
+
+        self.tree.pack(fill="both", expand=True)
+        self.tree.bind("<<TreeviewSelect>>", self.fill_from_list)
 
         self.refresh()
 
-
     def refresh(self):
-        self.list.delete(0, tk.END)
+        for item in self.tree.get_children():
+            self.tree.delete(item)
         for s in get_students():
-            self.list.insert(tk.END, s)
-
+            self.tree.insert("", "end", values=s)
 
     def fill_from_list(self, e):
-        if not self.list.curselection():
+        selected = self.tree.selection()
+        if not selected:
             return
-        data = self.list.get(self.list.curselection())
-        self.id_e.delete(0,tk.END)
-        self.n_e.delete(0,tk.END)
-        self.d_e.delete(0,tk.END)
+        data = self.tree.item(selected[0])["values"]
+        self.id_e.config(state="normal")
+        self.id_e.delete(0, tk.END)
+        self.n_e.delete(0, tk.END)
+        self.d_e.delete(0, tk.END)
 
         self.id_e.insert(0, data[0])
         self.n_e.insert(0, data[1])
         self.d_e.insert(0, data[2])
-
+        self.id_e.config(state="readonly")
 
     def add(self):
         if not self.n_e.get() or not self.d_e.get():
-            messagebox.showerror("Error","Fill name and department")
+            messagebox.showerror("Error", "Fill name and department")
             return
-        add_student(self.n_e.get(), self.d_e.get())
-        self.refresh()
-
+        try:
+            add_student(self.n_e.get(), self.d_e.get())
+            self.n_e.delete(0, tk.END)
+            self.d_e.delete(0, tk.END)
+            self.refresh()
+            messagebox.showinfo("Success", "Student added successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to add student: {str(e)}")
 
     def update(self):
         if not self.id_e.get():
-            messagebox.showerror("Error","Select a student first")
+            messagebox.showerror("Error", "Select a student first")
             return
-        update_student(
-            self.id_e.get(),
-            self.n_e.get(),
-            self.d_e.get()
-        )
-        self.refresh()
-
+        try:
+            update_student(
+                self.id_e.get(),
+                self.n_e.get(),
+                self.d_e.get()
+            )
+            self.refresh()
+            messagebox.showinfo("Success", "Student updated successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to update student: {str(e)}")
 
     def delete(self):
         if not self.id_e.get():
-            messagebox.showerror("Error","Select a student first")
+            messagebox.showerror("Error", "Select a student first")
             return
-        if not messagebox.askyesno("Confirm","Delete this student?"):
+        if not messagebox.askyesno("Confirm", "Delete this student?"):
             return
-        delete_student(self.id_e.get())
-        self.refresh()
-
+        try:
+            delete_student(self.id_e.get())
+            self.n_e.delete(0, tk.END)
+            self.d_e.delete(0, tk.END)
+            self.id_e.config(state="normal")
+            self.id_e.delete(0, tk.END)
+            self.id_e.config(state="readonly")
+            self.refresh()
+            messagebox.showinfo("Success", "Student deleted successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to delete student: {str(e)}")
 
     def search(self):
-        key = self.n_e.get()
-        self.list.delete(0, tk.END)
-        for s in search_students(key):
-            self.list.insert(tk.END, s)
+        key = self.n_e.get().strip()
+        if not key:
+            messagebox.showwarning("Warning", "Enter a name to search")
+            return
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        results = search_students(key)
+        if not results:
+            messagebox.showinfo("Search", "No students found matching your search")
+        for s in results:
+            self.tree.insert("", "end", values=s)
+

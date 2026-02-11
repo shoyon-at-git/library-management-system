@@ -14,7 +14,7 @@ def build_main_ui(root):
     header = tk.Frame(root, bg="#0b3c5d", height=70)
     header.pack(fill="x")
 
-    tk.Label(header, text="HSTU Library",
+    tk.Label(header, text="HSTU Library Management System",
              bg="#0b3c5d", fg="white",
              font=("Segoe UI", 20, "bold")).pack(pady=(5, 0))
 
@@ -23,36 +23,22 @@ def build_main_ui(root):
              bg="#0b3c5d", fg="white",
              font=("Segoe UI", 10)).pack()
 
-    # ---------- Main body (with background) ----------
-    bg_frame = tk.Frame(root)
-    bg_frame.pack(fill="both", expand=True)
-
-    # Load the image
-    img = Image.open("images/library.jpg")
-    img = img.resize((1200, 673), Image.LANCZOS)
-    bg_image = ImageTk.PhotoImage(img)
-
-    # Place background
-    bg_label = tk.Label(bg_frame, image=bg_image)
-    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
-
-    # Keep reference so image doesn't disappear
-    bg_label.image = bg_image
-
-    # ---------- Overlay body on top of background ----------
-    body = tk.Frame(bg_frame, bg="#ffffff")
-    body.place(relx=0.5, rely=0.5, anchor="center", width=1100, height=550)
+    # ---------- Main body ----------
+    body = tk.Frame(root, bg="#f5f5f5")
+    body.pack(fill="both", expand=True)
 
     # ---------- Sidebar ----------
-    sidebar = tk.Frame(body, bg="#e9eef3", width=160)
-    sidebar.pack(side="left", fill="y")
+    sidebar = tk.Frame(body, bg="#2c3e50", width=180)
+    sidebar.pack(side="left", fill="y", padx=0)
+    sidebar.pack_propagate(False)
 
     # ---------- Content area ----------
     content = tk.Frame(body, bg="white")
-    content.pack(side="right", fill="both", expand=True)
+    content.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
     # ---------- Pages ----------
     pages = {}
+    page_titles = {}
 
     def show(page):
         for p in pages.values():
@@ -63,24 +49,50 @@ def build_main_ui(root):
     pages["students"] = StudentsFrame(content)
     pages["issue"] = IssueFrame(content)
 
+    page_titles["books"] = "Books Management"
+    page_titles["students"] = "Students Management"
+    page_titles["issue"] = "Issue / Return Books"
+
     # ---------- Sidebar buttons ----------
+    tk.Label(sidebar, text="MENU", bg="#2c3e50",
+             fg="white", font=("Segoe UI", 12, "bold")).pack(pady=(20, 20), fill="x")
+
     def nav_button(text, page):
-        return tk.Button(
+        btn = tk.Button(
             sidebar,
             text=text,
             anchor="w",
+            bg="#34495e",
+            fg="white",
+            activebackground="#0b3c5d",
+            activeforeground="white",
             relief="flat",
             padx=15,
-            font=("Segoe UI", 10),
+            pady=12,
+            font=("Segoe UI", 11),
             command=lambda: show(page)
         )
+        return btn
 
-    tk.Label(sidebar, text="Navigation", bg="#e9eef3",
-             font=("Segoe UI", 10, "bold")).pack(pady=(10, 5))
+    nav_button("📚  Books", "books").pack(fill="x", pady=5, padx=10)
+    nav_button("👨‍🎓  Students", "students").pack(fill="x", pady=5, padx=10)
+    nav_button("🔁  Issue / Return", "issue").pack(fill="x", pady=5, padx=10)
 
-    nav_button("📚  Books", "books").pack(fill="x", pady=2)
-    nav_button("👨‍🎓  Students", "students").pack(fill="x", pady=2)
-    nav_button("🔁  Issue / Return", "issue").pack(fill="x", pady=2)
+    # Add logout button at bottom
+    tk.Frame(sidebar, bg="#2c3e50", height=1).pack(fill="x", expand=True)
+    tk.Button(
+        sidebar,
+        text="🚪  Logout",
+        anchor="w",
+        bg="#c0392b",
+        fg="white",
+        activebackground="#a93226",
+        relief="flat",
+        padx=15,
+        pady=12,
+        font=("Segoe UI", 11),
+        command=root.quit
+    ).pack(fill="x", pady=5, padx=10)
 
     show("books")
 
@@ -102,7 +114,8 @@ def main():
     root = tk.Tk()
     root.withdraw()
     root.title("HSTU Library Management System")
-    root.geometry("1200x700")  # match image size for clean look
+    root.geometry("1200x700")
+    root.minsize(1000, 600)
 
     def after_login():
         root.deiconify()

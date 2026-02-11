@@ -9,7 +9,7 @@ from gui.issue_frame import IssueFrame
 from gui.login_window import LoginWindow
 
 
-def build_main_ui(root):
+def build_main_ui(root, on_logout):
     # ---------- Header ----------
     header = tk.Frame(root, bg="#0b3c5d", height=70)
     header.pack(fill="x")
@@ -91,7 +91,7 @@ def build_main_ui(root):
         padx=15,
         pady=12,
         font=("Segoe UI", 11),
-        command=root.quit
+        command=on_logout
     ).pack(fill="x", pady=5, padx=10)
 
     show("books")
@@ -112,15 +112,28 @@ def main():
     init_db()
 
     root = tk.Tk()
-    root.withdraw()
     root.title("HSTU Library Management System")
     root.geometry("1200x700")
     root.minsize(1000, 600)
+    root.withdraw()
 
+    def show_logout():
+        # Clear all widgets from root
+        for widget in root.winfo_children():
+            widget.destroy()
+        
+        root.withdraw()
+        
+        # Show login window again
+        def after_login():
+            build_main_ui(root, show_logout)
+        
+        LoginWindow(root, after_login)
+
+    # Create initial login window
     def after_login():
-        root.deiconify()
-        build_main_ui(root)
-
+        build_main_ui(root, show_logout)
+    
     LoginWindow(root, after_login)
 
     root.mainloop()

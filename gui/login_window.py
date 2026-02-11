@@ -60,7 +60,8 @@ class LoginWindow(tk.Toplevel):
                  bg="#0b3c5d", fg="white", font=("Segoe UI", 11, "bold"),
                  padx=30, pady=8, relief="flat", cursor="hand2").pack(pady=(0, 10))
 
-        self.protocol("WM_DELETE_WINDOW", self.master.destroy)
+        # Close on X button closes the app
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def login(self):
         u = self.user_entry.get().strip()
@@ -71,9 +72,13 @@ class LoginWindow(tk.Toplevel):
             return
 
         if validate_login(u, p):
-            self.destroy()
+            self.master.deiconify()  # Show main window
+            self.destroy()  # Close login window
             self.on_success()
         else:
             messagebox.showerror("Login Failed", "Invalid username or password")
             self.pass_entry.delete(0, tk.END)
             self.user_entry.focus()
+
+    def on_close(self):
+        self.master.destroy()

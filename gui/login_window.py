@@ -67,6 +67,11 @@ class LoginWindow(tk.Toplevel):
              bg="#16a085", fg="white", font=("Segoe UI", 11, "bold"),
              padx=30, pady=8, relief="flat", cursor="hand2").pack(fill="x")
 
+        # Student login link
+        tk.Button(button_frame, text="👨‍🎓 Student Login", command=self.open_student_login,
+                 bg="#8e44ad", fg="white", font=("Segoe UI", 11, "bold"),
+                 padx=30, pady=8, relief="flat", cursor="hand2").pack(fill="x", pady=(8,0))
+
         # Close on X button closes the app
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -89,6 +94,109 @@ class LoginWindow(tk.Toplevel):
 
     def on_close(self):
         self.master.destroy()
+
+    def open_student_login(self):
+        sl = tk.Toplevel(self)
+        sl.title("Student Login - HSTU Library")
+        sl.geometry("420x300")
+        sl.resizable(False, False)
+
+        sl.update_idletasks()
+        x = (sl.winfo_screenwidth() // 2) - 210
+        y = (sl.winfo_screenheight() // 2) - 150
+        sl.geometry(f'420x300+{x}+{y}')
+
+        main_frame = tk.Frame(sl, bg="#0b3c5d")
+        main_frame.pack(fill="both", expand=True)
+
+        header = tk.Label(main_frame, text="Student Login",
+                         bg="#0b3c5d", fg="white",
+                         font=("Segoe UI", 16, "bold"))
+        header.pack(pady=(20, 5))
+
+        form_frame = tk.Frame(main_frame, bg="white")
+        form_frame.pack(fill="x", padx=30, pady=(10, 30))
+
+        tk.Label(form_frame, text="Username:", bg="white", fg="#333",
+                font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(10, 3))
+        username_entry = tk.Entry(form_frame, font=("Segoe UI", 11), width=30, bd=1)
+        username_entry.pack(fill="x", pady=(0, 10), ipady=5)
+
+        tk.Label(form_frame, text="Password:", bg="white", fg="#333",
+                font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 3))
+        password_entry = tk.Entry(form_frame, show="*", font=("Segoe UI", 11), width=30, bd=1)
+        password_entry.pack(fill="x", pady=(0, 10), ipady=5)
+
+        def do_student_login():
+            u = username_entry.get().strip()
+            p = password_entry.get().strip()
+            if not u or not p:
+                messagebox.showerror("Error", "Enter username and password", parent=sl)
+                return
+
+            from models.students import validate_student_login, get_student_by_id
+            ok, student_id = validate_student_login(u, p)
+            if not ok:
+                messagebox.showerror("Login Failed", "Invalid username or password", parent=sl)
+                return
+
+            info = get_student_by_id(student_id)
+            if not info:
+                messagebox.showerror("Error", "Student record not found", parent=sl)
+                return
+
+            # show student info window
+            si = tk.Toplevel(sl)
+            si.title("Student Info")
+            si.geometry("400x220")
+            si.resizable(False, False)
+            si.update_idletasks()
+            sx = (si.winfo_screenwidth() // 2) - 200
+            sy = (si.winfo_screenheight() // 2) - 110
+            si.geometry(f'400x220+{sx}+{sy}')
+
+            mf = tk.Frame(si, bg="white")
+            mf.pack(fill="both", expand=True, padx=20, pady=20)
+
+            tk.Label(mf, text=f"ID: {info[0]}", bg="white", fg="#333", font=("Segoe UI", 11)).pack(anchor="w", pady=6)
+            tk.Label(mf, text=f"Name: {info[1]}", bg="white", fg="#333", font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=6)
+            tk.Label(mf, text=f"Department: {info[2]}", bg="white", fg="#333", font=("Segoe UI", 11)).pack(anchor="w", pady=6)
+
+            tk.Button(mf, text="Close", command=si.destroy, bg="#0b3c5d", fg="white", padx=12, pady=6).pack(pady=(10,0))
+
+            sl.destroy()
+
+        password_entry.bind("<Return>", lambda e: do_student_login())
+
+        # place login button in a bottom bar so it is always visible
+        bottom_bar = tk.Frame(main_frame, bg="#0b3c5d")
+        bottom_bar.pack(fill="x", side="bottom")
+        bb_inner = tk.Frame(bottom_bar, bg="#0b3c5d")
+        bb_inner.pack(padx=30, pady=12, fill="x")
+
+        # Styled student login button with hover effect
+        def _on_enter(e):
+            student_btn.config(bg="#1e9b50", activebackground="#1e9b50")
+
+        def _on_leave(e):
+            student_btn.config(bg="#27ae60", activebackground="#27ae60")
+
+        student_btn = tk.Button(
+            bb_inner,
+            text="Login",
+            bg="#27ae60",
+            fg="white",
+            font=("Segoe UI", 12, "bold"),
+            bd=0,
+            relief="raised",
+            activeforeground="white",
+            activebackground="#1e9b50",
+            cursor="hand2",
+            command=do_student_login
+        )
+        student_btn.pack(fill="x", ipadx=4, ipady=8)
+        student_btn.bind("<Enter>", _on_enter)
+        student_btn.bind("<Leave>", _on_leave)
 
     def open_register(self):
         reg = tk.Toplevel(self)

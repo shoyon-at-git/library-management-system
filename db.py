@@ -27,6 +27,14 @@ def init_db():
         dept VARCHAR(50)
     )""")
 
+    cur.execute("""CREATE TABLE IF NOT EXISTS student_users(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id INT,
+        username VARCHAR(50) UNIQUE,
+        password VARCHAR(100),
+        FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+    )""")
+
     cur.execute("""CREATE TABLE IF NOT EXISTS issued(
         id INT AUTO_INCREMENT PRIMARY KEY,
         book_id INT,

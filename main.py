@@ -7,6 +7,7 @@ from gui.books_frame import BooksFrame
 from gui.students_frame import StudentsFrame
 from gui.issue_frame import IssueFrame
 from gui.login_window import LoginWindow
+from gui.about_frame import AboutFrame
 
 
 def build_main_ui(root, on_logout):
@@ -48,6 +49,7 @@ def build_main_ui(root, on_logout):
     pages["books"] = BooksFrame(content)
     pages["students"] = StudentsFrame(content)
     pages["issue"] = IssueFrame(content)
+    pages["about"] = AboutFrame(content)
 
     page_titles["books"] = "Books Management"
     page_titles["students"] = "Students Management"
@@ -77,6 +79,7 @@ def build_main_ui(root, on_logout):
     nav_button("📚  Books", "books").pack(fill="x", pady=5, padx=10)
     nav_button("👨‍🎓  Students", "students").pack(fill="x", pady=5, padx=10)
     nav_button("🔁  Issue / Return", "issue").pack(fill="x", pady=5, padx=10)
+    nav_button("ℹ️  About", "about").pack(fill="x", pady=5, padx=10)
 
     # Add logout button at bottom
     tk.Frame(sidebar, bg="#2c3e50", height=1).pack(fill="x", expand=True)

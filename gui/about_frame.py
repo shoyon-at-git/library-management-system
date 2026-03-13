@@ -1,99 +1,144 @@
+import os
 import tkinter as tk
 from tkinter import ttk
+import tkinter.font as tkfont
 from PIL import Image, ImageTk
-import os
+
+from gui.ui_theme import COLORS, page_header, card, text_widget, apply_app_theme
+
 
 class AboutFrame(tk.Frame):
     def __init__(self, master):
-        super().__init__(master, bg="white")
-
-        title = tk.Label(self, text="About HSTU Library", bg="white",
-                 fg="#0b3c5d", font=("Segoe UI", 20, "bold"), justify="center")
-        title.pack(pady=(0, 12))
-
-        top = tk.Frame(self, bg="white")
-        top.pack(fill="x", padx=15)
-
-        # Images container
-        imgs_frame = tk.Frame(top, bg="white")
-        imgs_frame.pack(fill="x")
-
-        # Try multiple filename variants (library1, library-1, library_1) and extensions
-        bases = ["library1", "library-1", "library_1", "library 1"]
-        img_names = [bases, [b.replace("1","2") for b in bases], [b.replace("1","3") for b in bases]]
-        exts = [".jpg", ".jpeg", ".png"]
+        super().__init__(master, bg=COLORS["app_bg"])
+        apply_app_theme(self)
         self.photos = []
+
+        page_header(
+            self,
+            "ℹ️ About HSTU Library",
+            "A cleaner information page with image cards and a readable article layout.",
+            "University info",
+        )
+
+        media_wrap, media_body = card(
+            self,
+            "Library Glimpses",
+            "A few visuals from the library so the page feels alive instead of looking like a wall of text with trust issues.",
+        )
+        media_wrap.pack(fill="x", padx=20, pady=(0, 14))
+
+        gallery = tk.Frame(media_body, bg=COLORS["surface"])
+        gallery.pack(fill="x")
+
+        bases = ["library1", "library-1", "library_1", "library 1"]
+        img_names = [bases, [b.replace("1", "2") for b in bases], [b.replace("1", "3") for b in bases]]
+        exts = [".jpg", ".jpeg", ".png"]
 
         def find_image_for_variants(variants):
             images_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images")
-            for v in variants:
-                for e in exts:
-                    p = os.path.join(images_dir, v + e)
-                    if os.path.exists(p):
-                        return p
+            for variant in variants:
+                for ext in exts:
+                    path = os.path.join(images_dir, variant + ext)
+                    if os.path.exists(path):
+                        return path
             return None
 
         for variants in img_names:
             path = find_image_for_variants(variants)
-            display_name = variants[0] + "*"
+            holder = tk.Frame(
+                gallery,
+                bg=COLORS["surface_alt"],
+                highlightbackground=COLORS["border"],
+                highlightthickness=1,
+                padx=8,
+                pady=8,
+            )
+            holder.pack(side="left", fill="both", expand=True, padx=6, pady=4)
+
             if path:
                 try:
                     img = Image.open(path)
-                    img.thumbnail((240, 160))
+                    img.thumbnail((280, 180))
                     ph = ImageTk.PhotoImage(img)
-                    lbl = tk.Label(imgs_frame, image=ph, bg="white")
+                    lbl = tk.Label(holder, image=ph, bg=COLORS["surface_alt"])
                     lbl.image = ph
-                    lbl.pack(side="left", padx=8, pady=8)
+                    lbl.pack(fill="both", expand=True)
                     self.photos.append(ph)
                 except Exception:
-                    lbl = tk.Label(imgs_frame, text=os.path.basename(path), bg="#ecf0f1", width=34, height=10)
-                    lbl.pack(side="left", padx=8, pady=8)
+                    tk.Label(
+                        holder,
+                        text=os.path.basename(path),
+                        bg=COLORS["surface_alt"],
+                        fg=COLORS["muted"],
+                        width=30,
+                        height=8,
+                    ).pack(fill="both", expand=True)
             else:
-                lbl = tk.Label(imgs_frame, text=display_name + "\n(not found)", bg="#ecf0f1", width=34, height=10)
-                lbl.pack(side="left", padx=8, pady=8)
+                tk.Label(
+                    holder,
+                    text=f"{variants[0]}\nnot found",
+                    bg=COLORS["surface_alt"],
+                    fg=COLORS["muted"],
+                    width=30,
+                    height=8,
+                ).pack(fill="both", expand=True)
 
-        # Text area with scrollbar
-        text_frame = tk.Frame(self, bg="white")
-        text_frame.pack(fill="both", expand=True, padx=15, pady=(10,15))
+        text_wrap, text_body = card(
+            self,
+            "Library Overview",
+            "Detailed institutional information with better spacing and readable typography.",
+            padx=14,
+            pady=14,
+        )
+        text_wrap.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
-        scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
+        text_frame = tk.Frame(text_body, bg=COLORS["surface"])
+        text_frame.pack(fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(text_frame, orient="vertical", style="App.Vertical.TScrollbar")
         scrollbar.pack(side="right", fill="y")
 
-        text = tk.Text(text_frame, wrap="word", yscrollcommand=scrollbar.set,
-                   bg="white", bd=0, font=("Segoe UI", 10), fg="#333")
+        text = text_widget(text_frame, yscrollcommand=scrollbar.set)
+        text.pack(fill="both", expand=True, side="left")
+        scrollbar.config(command=text.yview)
+
         long_text = (
-            "Hajee Mohammad Danesh Science and Technology University is only a Science and Technology University for north region of the country. "
-            "The library is called the heart of an institution. University creates knowledge through the research and the library of the university preserves the all kind of research results (knowledge). "
-            "So the library has been playing an enormous role for conducting research, lesson preparing and learning.\n\n"
+            "Hajee Mohammad Danesh Science and Technology University is the only Science and Technology University for the northern region of the country. "
+            "The library is called the heart of an institution. The university creates knowledge through research, and the library preserves research output and academic resources. "
+            "So the library plays an enormous role in research, lesson preparation, and learning.\n\n"
             "Activities and Facilities:\n\n"
-            "HSTU Library is a well furnished multi storied building. It is doing its daily activities by different sections, such as: Acquisition section, Circulation section, Processing section and Reference section which are situated at different location in the Library Building. Administrative section of the library does the administrative activities. Acquisition Section is always working hard to collect the all kind of required documents of the users. Recently it has collected a great deal of different types of books for different faculties of this university. Circulation section sets on the ground floor of the library building. All the researchers, students and teachers of this university may borrow their required books as per rule from the Circulation Section for reading the book outside of the library or home. Only those books that are more than 2 copies are available for loan to students/ teachers/ researchers. Processing section is doing an important job. It prepares the catalogue and classification all kind of documents by using the AACR-2 code and D.D.C. scheme. It is located on the ground floor of the library building. Reference section is another important section. It is situated at the first floor and second floor of the building. Teachers, researchers and students may read the rare documents sitting in the Reference Section. It also provides photocopy facility against a nominal fee. Another important service of this section is current awareness service. It regularly sends the list of current received documents to the faculties. Thesis, 73 titled home and abroad journals and 15 Daily newspapers are kept at the 2nd floor of the building. All kind of users can read the journal, daily newspaper and thesis here. There is a cyber center in the Library. All users may use the cyber center against a nominal fee.\n\n"
+            "HSTU Library is a well-furnished multistoried building. It operates through several sections including Acquisition, Circulation, Processing, and Reference. "
+            "The Administrative section manages administrative activities. Acquisition works to collect required documents for users. Recently, it collected many books for different faculties. "
+            "The Circulation section is on the ground floor. Researchers, students, and teachers may borrow required books as per the rules for home or outside reading. Only books with more than two copies are available for loan. "
+            "The Processing section prepares catalogues and classification using AACR-2 code and D.D.C. scheme. The Reference section is on the first and second floors, where teachers, researchers, and students may read rare documents. "
+            "It also provides photocopy service for a nominal fee and regularly sends lists of newly received documents to faculties. Thesis works, journals, and daily newspapers are preserved on the second floor. "
+            "There is also a cyber center in the library that users may use for a nominal fee.\n\n"
             "Mission:\n\n"
-            "The Library's mission is to provide comprehensive resources and services in support of the research, teaching and learning needs of the University community.\n\n"
+            "The Library's mission is to provide comprehensive resources and services in support of the research, teaching, and learning needs of the University community.\n\n"
             "Vision:\n\n"
-            "Build up a world-class Knowledge Resource Centre and provide innovative services and collections to the research, teaching and learning communities by using latest technology.\n\n"
-            "LIBRARY RESOURCES:\n\n"
+            "Build a world-class Knowledge Resource Centre and provide innovative services and collections to the research, teaching, and learning communities using the latest technology.\n\n"
+            "Library Resources:\n\n"
             "1. Printed Books: 23,105\n"
-            "2. THESIS: 800\n"
-            "3. Audio-Visual Materials: 300 nos\n"
-            "4. PERIODICAL:\n"
-            "a) Printed Journals: 89 (National and International)\n"
-            "b) E-Journals: HSTU Library is getting access over 4o thousand titled e-journals of 35 publishers through BIP Consortium, University Grants Commission Digital Library (UDL), HINARI, OARESCIENCES and AGORA.\n"
-            "c) E-books: HSTU Library is getting access over 7053 titled e-books of different subjects through University Grants Commission Digital Library (UDL).\n\n"
+            "2. Thesis: 800\n"
+            "3. Audio-Visual Materials: 300\n"
+            "4. Periodicals:\n"
+            "   a) Printed Journals: 89 (National and International)\n"
+            "   b) E-Journals: Access to more than 40 thousand e-journals through consortium and digital library programs.\n"
+            "   c) E-books: Access to 7,053 e-books of different subjects through digital library support.\n\n"
             "Library Hour:\n\n"
-            "The Library shall be opened from 8:00 am to 7:00 pm. It shall be wholly closed on university holidays.\n\n"
+            "The Library is open from 8:00 am to 7:00 pm and is closed on university holidays.\n\n"
             "Library User Policy:\n\n"
-            "1. A teacher may borrow up to 5 books for 30 days and a student/ a researcher may also borrow up to 3 books for 20 days at any given time.\n"
-            "2. All personal bags, coats, jackets, umbrellas, etc. are to be kept in the pigeonhole near the security desk.\n"
-            "3. Group study, gossiping, discussions, eating, drinking, and smoking are strictly prohibited inside the Library.\n"
-            "4. All students are requested to handle with care all the fittings, fixtures, furniture, equipment, books, journals, CD's computers, etc. of the Library and should leave them neat and tidy after use.\n"
-            "5. Mobile phone cannot be used inside the Library.\n"
-            "6. No book shall be issued to students for use in reading room or home within the last half hour previous to daily closing.\n"
+            "1. A teacher may borrow up to 5 books for 30 days, and a student or researcher may borrow up to 3 books for 20 days.\n"
+            "2. Personal bags, coats, jackets, umbrellas, and similar items must be kept near the security desk.\n"
+            "3. Group study, gossiping, eating, drinking, and smoking are prohibited inside the library.\n"
+            "4. Users must handle all library property carefully and leave materials neat and tidy after use.\n"
+            "5. Mobile phones cannot be used inside the library.\n"
+            "6. No book shall be issued within the last half hour before daily closing.\n"
         )
-        # Insert line-by-line and tag headings (lines that end with ':' ) as bold
-        import tkinter.font as tkfont
+
         bold_font = tkfont.Font(font=text.cget("font"))
         bold_font.configure(weight="bold")
-        text.tag_configure("heading", font=bold_font)
+        text.tag_configure("heading", font=bold_font, foreground=COLORS["primary_dark"])
 
         for line in long_text.splitlines(True):
             start = text.index(tk.INSERT)
@@ -103,5 +148,3 @@ class AboutFrame(tk.Frame):
                 text.tag_add("heading", start, end)
 
         text.config(state="disabled")
-        text.pack(fill="both", expand=True, side="left")
-        scrollbar.config(command=text.yview)

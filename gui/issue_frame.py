@@ -85,8 +85,7 @@ class IssueFrame(tk.Frame):
 
         chips = tk.Frame(body, bg=COLORS["surface"])
         chips.pack(fill="x", pady=(0, 12))
-        metric_chip(chips, "Today", str(date.today())).pack(side="left", padx=(0, 10))
-        metric_chip(chips, "Overdue highlight", "Soft red rows").pack(side="left")
+        
 
         columns = ("ID", "Book ID", "Student ID", "Issue Date", "Due Date", "Return Date", "Fine Amount")
         table_wrap = tk.Frame(body, bg=COLORS["surface"])

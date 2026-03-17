@@ -13,15 +13,89 @@ class AboutFrame(tk.Frame):
         apply_app_theme(self)
         self.photos = []
 
-        page_header(
+        # =========================
+        # Full-page scrollable shell
+        # =========================
+        self.canvas = tk.Canvas(
             self,
+            bg=COLORS["app_bg"],
+            highlightthickness=0,
+            bd=0,
+        )
+        self.v_scroll = ttk.Scrollbar(
+            self,
+            orient="vertical",
+            command=self.canvas.yview,
+            style="App.Vertical.TScrollbar",
+        )
+        self.canvas.configure(yscrollcommand=self.v_scroll.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.v_scroll.pack(side="right", fill="y")
+
+        self.scrollable_frame = tk.Frame(self.canvas, bg=COLORS["app_bg"])
+        self.canvas_window = self.canvas.create_window(
+            (0, 0),
+            window=self.scrollable_frame,
+            anchor="nw",
+        )
+
+        self.scrollable_frame.bind("<Configure>", self._on_frame_configure)
+        self.canvas.bind("<Configure>", self._on_canvas_configure)
+
+        # Mouse wheel bindings
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel_windows)
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel_linux_up)
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel_linux_down)
+
+        # =========================
+        # Page content
+        # =========================
+        self._build_ui()
+
+    def destroy(self):
+        try:
+            self.canvas.unbind_all("<MouseWheel>")
+            self.canvas.unbind_all("<Button-4>")
+            self.canvas.unbind_all("<Button-5>")
+        except Exception:
+            pass
+        super().destroy()
+
+    # =========================
+    # Scroll helpers
+    # =========================
+    def _on_frame_configure(self, event=None):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def _on_canvas_configure(self, event):
+        self.canvas.itemconfigure(self.canvas_window, width=event.width)
+
+    def _on_mousewheel_windows(self, event):
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def _on_mousewheel_linux_up(self, event):
+        self.canvas.yview_scroll(-1, "units")
+
+    def _on_mousewheel_linux_down(self, event):
+        self.canvas.yview_scroll(1, "units")
+
+    # =========================
+    # UI builder
+    # =========================
+    def _build_ui(self):
+        container = tk.Frame(self.scrollable_frame, bg=COLORS["app_bg"])
+        container.pack(fill="both", expand=True)
+
+        page_header(
+            container,
             "ℹ️ About HSTU Library",
             "A cleaner information page with image cards and a readable article layout.",
             "University info",
         )
 
         media_wrap, media_body = card(
-            self,
+            container,
             "Library Glimpses",
             "A few visuals from the library so the page feels alive instead of looking like a wall of text with trust issues.",
         )
@@ -60,7 +134,13 @@ class AboutFrame(tk.Frame):
                     img = Image.open(path)
                     img.thumbnail((280, 180))
                     ph = ImageTk.PhotoImage(img)
-                    lbl = tk.Label(holder, image=ph, bg=COLORS["surface_alt"])
+                    lbl = tk.Label(
+                        holder,
+                        image=ph,
+                        bg=COLORS["surface_alt"],
+                        bd=0,
+                        highlightthickness=0,
+                    )
                     lbl.image = ph
                     lbl.pack(fill="both", expand=True)
                     self.photos.append(ph)
@@ -84,23 +164,21 @@ class AboutFrame(tk.Frame):
                 ).pack(fill="both", expand=True)
 
         text_wrap, text_body = card(
-            self,
+            container,
             "Library Overview",
             "Detailed institutional information with better spacing and readable typography.",
             padx=14,
             pady=14,
         )
-        text_wrap.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        text_wrap.pack(fill="x", padx=20, pady=(0, 20))
 
         text_frame = tk.Frame(text_body, bg=COLORS["surface"])
         text_frame.pack(fill="both", expand=True)
 
-        scrollbar = ttk.Scrollbar(text_frame, orient="vertical", style="App.Vertical.TScrollbar")
-        scrollbar.pack(side="right", fill="y")
-
-        text = text_widget(text_frame, yscrollcommand=scrollbar.set)
-        text.pack(fill="both", expand=True, side="left")
-        scrollbar.config(command=text.yview)
+        # Important:
+        # no inner scrollbar here — full page itself is scrollable now
+        text = text_widget(text_frame)
+        text.pack(fill="both", expand=True)
 
         long_text = (
             "Hajee Mohammad Danesh Science and Technology University is the only Science and Technology University for the northern region of the country. "
@@ -147,4 +225,15 @@ class AboutFrame(tk.Frame):
             if line.strip().endswith(":"):
                 text.tag_add("heading", start, end)
 
-        text.config(state="disabled")
+        text.config(
+            state="disabled",
+            height=26,
+            bd=0,
+            highlightthickness=0,
+            relief="flat",
+            padx=6,
+            pady=6,
+        )
+
+        # bottom breathing space
+        tk.Frame(container, bg=COLORS["app_bg"], height=4).pack(fill="x")
